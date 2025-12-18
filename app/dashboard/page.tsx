@@ -587,6 +587,17 @@ const SessionHistoryCard = () => {
 
 
 const Dashboard = () => {
+
+  useEffect(() => {
+  document.body.style.overflow = "hidden";
+  document.documentElement.style.overflow = "hidden";
+
+  return () => {
+    document.body.style.overflow = "";
+    document.documentElement.style.overflow = "";
+  };
+}, []);
+
   const [hoveredSession, setHoveredSession] = useState<number | null>(null);
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -776,7 +787,9 @@ const Dashboard = () => {
                   height: '40px',
                   width: 'auto',
                   objectFit: 'contain',
+                  cursor: 'pointer',
                 }}
+                onClick={() => window.location.href = '/coding'}
               />
 
               <span
