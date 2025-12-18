@@ -73,7 +73,7 @@ const Navbar = () => {
           ) : (
             <>
               <a
-                href="/auth/signin"
+                href="/auth/signin?callbackUrl=/"
                 className="px-4 py-2 rounded-full border border-[#7042f861] text-gray-200 hover:bg-[#7042f861]/30"
               >
                 Sign in

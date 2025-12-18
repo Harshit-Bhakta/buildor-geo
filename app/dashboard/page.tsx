@@ -879,7 +879,13 @@ const Dashboard = () => {
                 }}
               >
                 <motion.div variants={cardSlideFromLeft}>
-                  <GitHubIdentityCard githubData={undefined} />
+                  {loading ? (
+                    <div style={{ ...cardBaseStyle, backgroundColor: 'rgba(17, 24, 39, 0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '200px' }}>
+                      <div style={{ color: 'white', fontSize: '14px' }}>Loading GitHub data...</div>
+                    </div>
+                  ) : (
+                    <GitHubIdentityCard githubData={githubData} />
+                  )}
                 </motion.div>
 
                 <motion.div variants={cardSlideFromLeft}>

@@ -8,7 +8,7 @@ export default function SignIn() {
   const { status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const callbackUrl = searchParams.get("callbackUrl") || "/";
   const [loading, setLoading] = useState(false);
 
   // ✅ If already logged in, redirect (prevents OAuth loop)
@@ -31,13 +31,13 @@ export default function SignIn() {
   return (
     // 🔥 This wrapper puts the page ABOVE StarBackground
     <div className="relative z-50 min-h-screen flex items-center justify-center pointer-events-auto">
-      
+
       {/* ✅ Fully transparent background */}
       <div className="absolute inset-0 bg-transparent" />
 
       {/* ✅ Sign-in card */}
       <div className="relative z-50 bg-[#030014cc] backdrop-blur-xl border border-[#7042f861] rounded-2xl p-10 max-w-md w-full mx-4 shadow-2xl">
-        
+
         <div className="text-center mb-8">
           <img
             src="/NavLogo.png"
