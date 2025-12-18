@@ -1,7 +1,6 @@
 "use client";
 import React, { useEffect, useState } from 'react';
-import { ComposableMap, Geographies, Geography, Marker } from 'react-simple-maps';
-import { Line } from "react-simple-maps";
+import { ComposableMap, Geographies, Geography, Marker, Line } from 'react-simple-maps';
 import { motion } from "framer-motion";
 import { cardFadeUp, cardSlideFromLeft, pageFade, staggerContainer } from "../animations/dashboardAnimation";
 import { useSession } from "next-auth/react";
@@ -594,7 +593,7 @@ const Dashboard = () => {
   const [githubData, setGithubData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  const deviceMarkers = [
+  const deviceMarkers: { name: string; coordinates: [number, number] }[] = [
     { name: "Anchorage, Alaska", coordinates: [-149.9003, 61.2181] },
     { name: "New York, USA", coordinates: [-74.006, 40.7128] },
     { name: "São Paulo, Brazil", coordinates: [-46.6333, -23.5505] },
@@ -880,7 +879,7 @@ const Dashboard = () => {
                 }}
               >
                 <motion.div variants={cardSlideFromLeft}>
-                  <GitHubIdentityCard />
+                  <GitHubIdentityCard githubData={undefined} />
                 </motion.div>
 
                 <motion.div variants={cardSlideFromLeft}>
