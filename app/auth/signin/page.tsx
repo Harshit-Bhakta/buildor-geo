@@ -1,6 +1,10 @@
 "use client";
 
-export const dynamic = "force-dynamic"; // ✅ MUST come AFTER "use client"
+/**
+ * ✅ This alone is enough to stop prerendering
+ * ❌ Do NOT use `revalidate` in client components
+ */
+export const dynamic = "force-dynamic";
 
 import { signIn, useSession } from "next-auth/react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -13,7 +17,7 @@ export default function SignIn() {
   const callbackUrl = searchParams.get("callbackUrl") || "/";
   const [loading, setLoading] = useState(false);
 
-  // ✅ Prevent OAuth redirect loop
+  // Prevent OAuth redirect loop
   useEffect(() => {
     if (status === "authenticated") {
       router.replace(callbackUrl);
