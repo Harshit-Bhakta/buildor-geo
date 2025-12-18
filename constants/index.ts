@@ -80,23 +80,7 @@ export const Skill_data = [
 
 ];
 
-export const Socials = [
-    {
-        name: "Instagram",
-        src: "/instagram.svg",
-        link: "https://www.instagram.com/nikhil_maguwala/",
-    },
-    {
-        name: "Github",
-        src: "/github_white.jpg",
-        link: "https://github.com/nikhilmaguwala",
-    },
-    {
-        name: "Linkedin",
-        src: "/linkedin.svg",
-        link: "https://www.linkedin.com/in/nikhil-maguwala/",
-    },
-];
+/* Socials removed (GitHub, Instagram, LinkedIn) per request */
 
 
 
