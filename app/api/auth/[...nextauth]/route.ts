@@ -1,11 +1,13 @@
+// app/api/auth/[...nextauth]/route.ts
 import NextAuth, { NextAuthOptions, Profile as NextAuthProfile } from "next-auth";
+import GithubProvider from "next-auth/providers/github";
 
 interface Profile extends NextAuthProfile {
   id?: string;
 }
-import GithubProvider from "next-auth/providers/github";
 
-export const authOptions: NextAuthOptions = {
+// ✅ Keep authOptions but don't export it (Vercel build error fix)
+const authOptions: NextAuthOptions = {
   providers: [
     GithubProvider({
       clientId: process.env.GITHUB_CLIENT_ID!,
@@ -34,11 +36,12 @@ export const authOptions: NextAuthOptions = {
     },
   },
   pages: {
-    signIn: '/auth/signin',
+    signIn: '/signin', // ✅ Changed from '/auth/signin' to '/signin'
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
 
 const handler = NextAuth(authOptions);
 
+// ✅ Only export GET and POST handlers
 export { handler as GET, handler as POST };
