@@ -1,11 +1,11 @@
 "use client";
 import React, { useEffect, useState } from 'react';
-import { ComposableMap, Geographies, Geography, Marker, Line } from 'react-simple-maps';
+import { ComposableMap, Geographies, Geography, Marker, Line, Point } from 'react-simple-maps';
 import { motion } from "framer-motion";
 import { cardFadeUp, cardSlideFromLeft, pageFade, staggerContainer } from "../animations/dashboardAnimation";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-
+import { tasksData, Task, SubTask } from '../../data/tasksData';
 
 
 
@@ -199,7 +199,7 @@ const ActiveLearningTrackCard = () => {
 };
 
 //Geospatial Card
-const GeospatialTasksCard = () => {
+const GeospatialTasksCard = ({ onTaskSelect }: { onTaskSelect: (taskId: string) => void }) => {
   return (
     <div
       style={{
@@ -210,7 +210,6 @@ const GeospatialTasksCard = () => {
         justifyContent: 'space-between',
       }}
     >
-      {/* Header */}
       <div
         style={{
           display: 'flex',
@@ -225,8 +224,7 @@ const GeospatialTasksCard = () => {
               width: '28px',
               height: '28px',
               borderRadius: '8px',
-              background:
-                'linear-gradient(135deg, #6366f1, #22d3ee)',
+              background: 'linear-gradient(135deg, #6366f1, #22d3ee)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -253,13 +251,11 @@ const GeospatialTasksCard = () => {
         </button>
       </div>
 
-      {/* Illustration */}
       <div
         style={{
           height: '110px',
           borderRadius: '12px',
-          background:
-            'radial-gradient(circle at top right, rgba(99,102,241,0.35), rgba(0,0,0,0.25))',
+          background: 'radial-gradient(circle at top right, rgba(99,102,241,0.35), rgba(0,0,0,0.25))',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -276,7 +272,6 @@ const GeospatialTasksCard = () => {
         </div>
       </div>
 
-      {/* Tasks Due */}
       <div style={{ marginBottom: '10px' }}>
         <div
           style={{
@@ -285,7 +280,7 @@ const GeospatialTasksCard = () => {
             marginBottom: '8px',
           }}
         >
-          3 Tasks Due
+          {tasksData.length} Tasks Available
         </div>
 
         <div
@@ -297,15 +292,38 @@ const GeospatialTasksCard = () => {
             color: 'rgba(255,255,255,0.85)',
           }}
         >
-          <div>📊 Analyze Heatmaps</div>
-          <div>🧭 Update Boundaries</div>
-          <div>🛰️ Process Lidar Data</div>
+          {tasksData.map((task) => (
+            <div
+              key={task.id}
+              onClick={() => onTaskSelect(task.id)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                backgroundColor: 'rgba(255,255,255,0.05)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(99,102,241,0.2)';
+                e.currentTarget.style.transform = 'translateX(4px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)';
+                e.currentTarget.style.transform = 'translateX(0)';
+              }}
+            >
+              <span>{task.icon}</span>
+              <span>{task.title}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
   );
 };
-
 
 // Dataset Library Card
 const DatasetLibraryCard = () => {
@@ -589,22 +607,27 @@ const SessionHistoryCard = () => {
 const Dashboard = () => {
 
   useEffect(() => {
-  document.body.style.overflow = "hidden";
-  document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
 
-  return () => {
-    document.body.style.overflow = "";
-    document.documentElement.style.overflow = "";
-  };
-}, []);
+    return () => {
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    };
+  }, []);
 
   const [hoveredSession, setHoveredSession] = useState<number | null>(null);
   const { data: session, status } = useSession();
   const router = useRouter();
   const [githubData, setGithubData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [taskLocations, setTaskLocations] = useState<{ name: string; coordinates: [number, number] }[]>([]);
+  const [completedSubtasks, setCompletedSubtasks] = useState<string[]>([]);
 
-  const deviceMarkers: { name: string; coordinates: [number, number] }[] = [
+  // Use task locations if task is selected, otherwise show default markers
+  // Default markers when no task is selected
+  const defaultMarkers: { name: string; coordinates: [number, number] }[] = [
     { name: "Anchorage, Alaska", coordinates: [-149.9003, 61.2181] },
     { name: "New York, USA", coordinates: [-74.006, 40.7128] },
     { name: "São Paulo, Brazil", coordinates: [-46.6333, -23.5505] },
@@ -613,6 +636,12 @@ const Dashboard = () => {
     { name: "Sydney, Australia", coordinates: [151.2093, -33.8688] },
     { name: "Wellington, New Zealand", coordinates: [174.7762, -41.2865] },
   ];
+
+  // Use task locations if task is selected, otherwise show default
+  const deviceMarkers = selectedTask && selectedTask.subTasks.length > 0
+    ? selectedTask.subTasks.map((st: { location: any; }) => st.location)
+    : defaultMarkers;
+
 
   const [visibleSegments, setVisibleSegments] = useState<number>(0);
   // Authentication check and GitHub data fetch
@@ -684,8 +713,7 @@ const Dashboard = () => {
       }, 1200);
       return () => clearTimeout(timer);
     }
-  }, [visibleSegments]);
-
+  }, [visibleSegments, deviceMarkers.length]);
 
 
   const sessions = [
@@ -695,6 +723,49 @@ const Dashboard = () => {
     { name: "Alex Wright", location: "London, UK", flag: "🇬🇧", device: "MacBook Air", time: "2 days ago" },
     { name: "Emma Davis", location: "Sydney, AUS", flag: "🇦🇺", device: "iPhone 13", time: "3 days ago" },
   ];
+
+  // Load completed subtasks from storage on mount
+  useEffect(() => {
+    const loadProgress = async () => {
+      try {
+        const result = localStorage.getItem('task-progress');
+        if (result) {
+          const progress = JSON.parse(result);
+          setCompletedSubtasks(progress.completedSubtasks || []);
+        }
+      } catch (error) {
+        console.log('No previous progress found');
+      }
+    };
+    loadProgress();
+  }, []);
+
+  const handleTaskSelect = (taskId: string) => {
+    const task = tasksData.find((t: { id: string; }) => t.id === taskId);
+    if (task) {
+      setSelectedTask(task);
+      setVisibleSegments(0); // Reset animation
+    }
+  };
+
+  const handleTaskClear = () => {
+    setSelectedTask(null);
+  };
+
+  const handleMarkerClick = (subtask: SubTask) => {
+    // Only allow clicking the start marker or completed + next one
+    const subtaskIndex = selectedTask?.subTasks.findIndex((st: { id: any; }) => st.id === subtask.id) ?? -1;
+    const isStart = subtaskIndex === 0;
+    const previousCompleted = subtaskIndex > 0 &&
+      completedSubtasks.includes(selectedTask?.subTasks[subtaskIndex - 1].id ?? '');
+
+    if (isStart || previousCompleted) {
+      // Navigate to coding page with task data
+      if (selectedTask) {
+        router.push(`/coding?taskId=${selectedTask.id}&subtaskId=${subtask.id}`);
+      }
+    }
+  };
 
   return (
     <motion.div style={{
@@ -910,13 +981,14 @@ const Dashboard = () => {
                 </motion.div>
 
                 <motion.div variants={cardSlideFromLeft}>
-                  <GeospatialTasksCard />
+                  <GeospatialTasksCard onTaskSelect={handleTaskSelect} />
                 </motion.div>
               </motion.div>
 
 
-
+            
               {/* Large Map Only */}
+
               <div style={{
                 flex: 1,
                 backgroundColor: 'transparent',
@@ -928,6 +1000,8 @@ const Dashboard = () => {
                 boxShadow: '0 8px 32px rgba(136, 103, 255, 0.22)',
                 overflow: 'hidden'
               }}>
+
+                
                 <div style={{
                   width: '100%',
                   height: '100%',
@@ -936,6 +1010,67 @@ const Dashboard = () => {
                   overflow: 'hidden',
                   position: 'relative'
                 }}>
+                  {/* Task Name and Clear Button - Floating inside map */}
+    {selectedTask && (
+      <>
+        {/* Task Name - Top Left */}
+        <div style={{
+          position: 'absolute',
+          top: '20px',
+          left: '0px',
+          zIndex: 1000,
+          fontSize: '20px',
+          fontWeight: 700,
+          color: 'white',
+          textShadow: '0 4px 12px rgba(0,0,0,0.9)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          backgroundColor: 'transparent',
+          backdropFilter: 'blur(0px)',
+          padding: '12px 20px',
+          borderRadius: '12px',
+          border: '1px solid rgba(255, 255, 255, 0)',
+        }}>
+          <span style={{ fontSize: '20px' }}>{selectedTask.icon}</span>
+          <span>{selectedTask.title}</span>
+        </div>
+
+        {/* Clear Task Button - Top Right */}
+        <button
+          onClick={handleTaskClear}
+          style={{
+            position: 'absolute',
+            top: '20px',
+            right: '20px',
+            zIndex: 1000,
+            padding: '12px 24px',
+            backgroundColor: 'transparent',
+            backdropFilter: 'blur(5px)',
+            border: '1px solid rgba(255, 255, 255, 0.6)',
+            borderRadius: '12px',
+            color: 'white',
+            fontSize: '14px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            transition: 'all 0.3s',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.4)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.4)';
+          }}
+        >
+          Clear Task
+        </button>
+      </>
+    )}
                   <ComposableMap
                     projection="geoMercator"
                     projectionConfig={{
@@ -959,7 +1094,7 @@ const Dashboard = () => {
                     </Geographies>
                     {/* Animated connecting lines */}
                     {/* Animated connecting lines */}
-                    {deviceMarkers.slice(0, visibleSegments + 1).map((marker, index) => {
+                    {deviceMarkers.slice(0, visibleSegments + 1).map((marker: { coordinates: Point | undefined; }, index: number) => {
                       if (index === 0) return null;
                       const prevMarker = deviceMarkers[index - 1];
                       const isNewest = index === visibleSegments;
@@ -981,17 +1116,55 @@ const Dashboard = () => {
                     })}
 
                     {/* MARKERS */}
-                    {deviceMarkers.map((marker, index) => {
+                    {deviceMarkers.map((marker: { name: string | number | bigint | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<React.AwaitedReactNode> | null | undefined; coordinates: Point | undefined; }, index: number) => {
                       const isStart = index === 0;
                       const isEnd = index === deviceMarkers.length - 1;
+                      const subtask = selectedTask?.subTasks[index];
+                      const isCompleted = subtask ? completedSubtasks.includes(subtask.id) : false;
+                      const isPrevCompleted = index > 0 && selectedTask?.subTasks[index - 1]
+                        ? completedSubtasks.includes(selectedTask.subTasks[index - 1].id)
+                        : false;
+                      const isClickable = selectedTask ? (isStart || isPrevCompleted) : false;
 
                       return (
-                        <Marker key={marker.name} coordinates={marker.coordinates}>
-                          {/* Base green marker */}
-                          <circle r={12} fill="#00ff48" opacity={0.25} />
-                          <circle r={6} fill="#00ff48" stroke="#ffffff" strokeWidth={2} />
+                        <Marker key={`${marker.name}-${index}`} coordinates={marker.coordinates}>
+                          {/* Base marker */}
+                          <circle
+                            r={12}
+                            fill={isCompleted ? "#10b981" : "#00ff48"}
+                            opacity={0.25}
+                          />
+                          <circle
+                            r={6}
+                            fill={isCompleted ? "#10b981" : "#00ff48"}
+                            stroke="#ffffff"
+                            strokeWidth={2}
+                            style={{
+                              cursor: isClickable ? 'pointer' : 'default',
+                              opacity: selectedTask && !isClickable && !isCompleted ? 0.3 : 1
+                            }}
+                            onClick={() => {
+                              if (selectedTask && subtask && isClickable) {
+                                handleMarkerClick(subtask);
+                              }
+                            }}
+                          />
 
-                          {/* Floating location icon on START and END */}
+                          {/* Completed checkmark */}
+                          {isCompleted && (
+                            <text
+                              x="0"
+                              y="2"
+                              textAnchor="middle"
+                              fill="white"
+                              fontSize="8"
+                              fontWeight="bold"
+                            >
+                              ✓
+                            </text>
+                          )}
+
+                          {/* Floating location icon on START and END cities always */}
                           {(isStart || isEnd) && (
                             <image
                               href="/location.png"
@@ -1000,8 +1173,16 @@ const Dashboard = () => {
                               width={36}
                               height={36}
                               preserveAspectRatio="xMidYMid meet"
+                              style={{
+                                cursor: isClickable ? 'pointer' : 'default',
+                                pointerEvents: isClickable ? 'all' : 'none'
+                              }}
+                              onClick={() => {
+                                if (subtask && isClickable) {
+                                  handleMarkerClick(subtask);
+                                }
+                              }}
                             >
-                              {/* 🌊 Floating animation */}
                               <animateTransform
                                 attributeName="transform"
                                 type="translate"
@@ -1012,6 +1193,35 @@ const Dashboard = () => {
                                 direction="alternate"
                               />
                             </image>
+                          )}
+
+                          {/* Subtask label - only show when task is selected */}
+                          {selectedTask && subtask && (
+                            <>
+                              <text
+                                y={30}
+                                textAnchor="middle"
+                                fill="white"
+                                fontSize="9"
+                                fontWeight="600"
+                                style={{
+                                  textShadow: '0 2px 4px rgba(0,0,0,0.8)'
+                                }}
+                              >
+                                {subtask.stepNumber}. {subtask.title.substring(0, 20)}{subtask.title.length > 20 ? '...' : ''}
+                              </text>
+                              <text
+                                y={42}
+                                textAnchor="middle"
+                                fill="rgba(255,255,255,0.7)"
+                                fontSize="8"
+                                style={{
+                                  textShadow: '0 2px 4px rgba(0,0,0,0.8)'
+                                }}
+                              >
+                                {marker.name}
+                              </text>
+                            </>
                           )}
                         </Marker>
                       );
