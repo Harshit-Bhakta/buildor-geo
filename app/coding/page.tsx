@@ -15,6 +15,7 @@ const CodingPage = () => {
   const subtaskId = searchParams.get('subtaskId');
   const [currentHint, setCurrentHint] = useState<string | null>(null);
   const [hintStep, setHintStep] = useState(0);
+  const [activeOverlay, setActiveOverlay] = useState<null | "map" | "resources">(null);
   const [task, setTask] = useState<Task | null>(null);
   const [subtask, setSubtask] = useState<SubTask | null>(null);
   const [code, setCode] = useState('');
@@ -208,7 +209,6 @@ const CodingPage = () => {
             src="/NavLogo.png"
             alt="Buildor Geo"
             style={{ height: '32px', width: 'auto', cursor: 'pointer' }}
-            onClick={() => router.push('/dashboard')}
           />
           <span style={{ fontSize: '16px', fontWeight: 600 }}>Buildor Geo</span>
         </div>
@@ -493,7 +493,13 @@ const CodingPage = () => {
               {['editor.py', 'map-output.png', 'resources.txt'].map((tab) => (
                 <button
                   key={tab}
-                  onClick={() => setActiveTab(tab)}
+                  onClick={() => {
+                    setActiveTab(tab);
+                    if (tab === "map-output.png") setActiveOverlay("map");
+                    else if (tab === "resources.txt") setActiveOverlay("resources");
+                    else setActiveOverlay(null);
+                  }}
+
                   style={{
                     padding: '6px 12px',
                     backgroundColor: activeTab === tab ? 'rgba(99, 102, 241, 0.25)' : 'transparent',
@@ -740,7 +746,11 @@ const CodingPage = () => {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '8px'
+              gap: '8px',
+              position: "sticky",
+              bottom: 0,
+              zIndex: 10,
+
             }}>
               <button
                 onClick={handleSubmit}
@@ -809,6 +819,315 @@ const CodingPage = () => {
   }
 `}</style>
       </div>
+      {/* ================= OVERLAYS ================= */}
+{activeOverlay && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.85)",
+      backdropFilter: "blur(0px)",
+      WebkitBackdropFilter: "blur(0px)",
+      zIndex: 9999,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "40px",
+    }}
+    onClick={() => setActiveOverlay(null)}
+  >
+    <div
+      onClick={(e) => e.stopPropagation()}
+      style={{
+        width: activeOverlay === "map" ? "380px" : "450px",
+        maxHeight: "85vh",
+        backgroundImage: 'url("/cards.png")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        borderRadius: "12px",
+        border: "1px solid rgba(255,255,255,0.15)",
+        boxShadow: "0 30px 90px rgba(0,0,0,0.8)",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      {/* HEADER */}
+      <div
+        style={{
+          padding: "12px 16px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          background: "rgba(0, 0, 0, 0)",
+          backdropFilter: "blur(0px)",
+          WebkitBackdropFilter: "blur(0px)",
+        }}
+      >
+        <h3 style={{ fontSize: "14px", fontWeight: 600, display: "flex", alignItems: "center", gap: "8px", margin: 0 }}>
+          {activeOverlay === "map" ? (
+            <>
+              <span style={{ fontSize: "16px" }}>🗺️</span> Map Output Preview
+            </>
+          ) : (
+            <>
+              <span style={{ fontSize: "16px" }}>📘</span> Helpful Resources
+            </>
+          )}
+        </h3>
+        <button
+          onClick={() => setActiveOverlay(null)}
+          style={{
+            background: "transparent",
+            border: "none",
+            color: "rgba(255,255,255,0.5)",
+            fontSize: "20px",
+            cursor: "pointer",
+            padding: "0",
+            lineHeight: "1",
+          }}
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* BODY */}
+      <div
+        style={{
+          padding: "16px",
+          overflowY: "auto",
+          flex: 1,
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          background: "rgba(15, 20, 35, 0)",
+          backdropFilter: "blur(00px)",
+          WebkitBackdropFilter: "blur(0px)",
+        }}
+        className="hide-scrollbar"
+      >
+        {/* ================= MAP OUTPUT ================= */}
+        {activeOverlay === "map" && (
+          <>
+            <div style={{
+              position: 'relative',
+              marginBottom: "16px",
+            }}>
+              <img
+                src="/task.png"
+                alt="Expected Output"
+                style={{
+                  width: "100%",
+                  borderRadius: "8px",
+                  display: 'block'
+                }}
+              />
+              {/* Legend overlay on the map */}
+              <div style={{
+                position: 'absolute',
+                bottom: '10px',
+                right: '10px',
+                background: 'rgba(240,240,240,0.95)',
+                borderRadius: '6px',
+                padding: '8px 10px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                fontSize: '9px',
+                color: '#333'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                  <div style={{ width: '14px', height: '2px', background: '#FF8C69', border: '1px solid #D2691E' }}></div>
+                  <span style={{ fontWeight: 600 }}>District Boundary</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                  <div style={{ width: '14px', height: '2px', background: '#40E0D0' }}></div>
+                  <span style={{ fontWeight: 600 }}>River Network</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ width: '14px', height: '14px', background: 'rgba(173, 216, 230, 0.5)', border: '1px solid #ADD8E6', borderRadius: '2px' }}></div>
+                  <span style={{ fontWeight: 600 }}>Flood Buffer Zone</span>
+                </div>
+              </div>
+            </div>
+
+            <h4 style={{ fontSize: "13px", marginBottom: "10px", fontWeight: 700, margin: "0 0 10px 0" }}>
+              What to Observe
+            </h4>
+            <ul style={{ 
+              fontSize: "11px", 
+              color: "rgba(255,255,255,0.85)", 
+              lineHeight: 1.6, 
+              paddingLeft: "18px",
+              margin: 0,
+              listStyle: "disc"
+            }}>
+              <li style={{ marginBottom: "6px" }}>
+                The flood buffer zones are shown in light blue along the river network.
+              </li>
+              <li style={{ marginBottom: "6px" }}>
+                The buffer follows the river shapes closely, expanding roughly 500 m outwards.
+              </li>
+              <li style={{ marginBottom: "6px" }}>
+                The result is clipped to the district boundary.
+              </li>
+            </ul>
+          </>
+        )}
+
+        {/* ================= RESOURCES ================= */}
+        {activeOverlay === "resources" && (
+          <>
+            <h4 style={{ fontSize: "14px", marginBottom: "14px", fontWeight: 700, margin: "0 0 14px 0" }}>
+              Concepts You'll Use
+            </h4>
+            
+            <div style={{ marginBottom: "18px" }}>
+              <p style={{ fontSize: "12px", fontWeight: 700, marginBottom: "8px", margin: "0 0 8px 0" }}>
+                • Coordinate Reference System (CRS)
+              </p>
+              <p style={{ 
+                fontSize: "11px", 
+                color: "rgba(255,255,255,0.8)", 
+                lineHeight: 1.5, 
+                paddingLeft: "14px",
+                margin: 0
+              }}>
+                CRS determines how the 2D map projection relates to real-world coordinates. For distance-based buffers, use a projected CRS (e.g. EPSG:32643).
+              </p>
+            </div>
+
+            <div style={{ marginBottom: "18px" }}>
+              <p style={{ fontSize: "12px", fontWeight: 700, marginBottom: "8px", margin: "0 0 8px 0" }}>
+                • Buffering
+              </p>
+              <p style={{ 
+                fontSize: "11px", 
+                color: "rgba(255,255,255,0.8)", 
+                lineHeight: 1.5, 
+                paddingLeft: "14px",
+                margin: 0
+              }}>
+                Buffering creates a zone around a line (e.g. river) at fixed distance. Always check the unit of buffer distance (meters vs degrees).
+              </p>
+            </div>
+
+            <div style={{ marginBottom: "18px" }}>
+              <p style={{ fontSize: "12px", fontWeight: 700, marginBottom: "8px", margin: "0 0 8px 0" }}>
+                • Clipping
+              </p>
+              <p style={{ 
+                fontSize: "11px", 
+                color: "rgba(255,255,255,0.8)", 
+                lineHeight: 1.5, 
+                paddingLeft: "14px",
+                margin: 0
+              }}>
+                Clipping restricts data to an area of interest. Here, it limits the flood buffer zones to within the district boundary.
+              </p>
+            </div>
+
+            <h4 style={{ fontSize: "14px", margin: "20px 0 14px", fontWeight: 700 }}>
+              Common Mistakes
+            </h4>
+            <ul style={{ 
+              fontSize: "11px", 
+              color: "rgba(255,255,255,0.8)", 
+              lineHeight: 1.5, 
+              paddingLeft: "18px",
+              margin: 0,
+              listStyle: "disc"
+            }}>
+              <li style={{ marginBottom: "8px" }}>
+                Using the incorrect CRS like EPSG:4326 will lead to incorrect buffer distances.
+              </li>
+              <li style={{ marginBottom: "8px" }}>
+                Be careful to check units: 1 degree ≠ 1 meter! Always use a CRS with meters when buffering.
+              </li>
+              <li style={{ marginBottom: "8px" }}>
+                Remember that 'clip' is the operation that restricts data to within a boundary, not "intersect".
+              </li>
+            </ul>
+
+            <h4 style={{ fontSize: "14px", margin: "20px 0 14px", fontWeight: 700 }}>
+              Helpful References
+            </h4>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <div style={{ 
+                padding: "10px 12px", 
+                background: "rgba(99,102,241,0.15)", 
+                borderRadius: "6px",
+                border: "1px solid rgba(99,102,241,0.3)",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px"
+              }}>
+                <span style={{ fontSize: "14px" }}>📄</span>
+                <span style={{ fontSize: "11px", fontWeight: 500 }}>View CRS Guide - GeoPandas Documentation</span>
+              </div>
+              <div style={{ 
+                padding: "10px 12px", 
+                background: "rgba(99,102,241,0.15)", 
+                borderRadius: "6px",
+                border: "1px solid rgba(99,102,241,0.3)",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px"
+              }}>
+                <span style={{ fontSize: "14px" }}>📄</span>
+                <span style={{ fontSize: "11px", fontWeight: 500 }}>Buffering in Python - GeoPandas Buffer</span>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* FOOTER */}
+      <div
+        style={{
+          padding: "12px 16px",
+          display: "flex",
+          justifyContent: "center",
+          gap: "10px",
+          background: "rgba(0, 0, 0, 0)",
+          backdropFilter: "blur(0px)",
+          WebkitBackdropFilter: "blur(0px)",
+        }}
+      >
+        {activeOverlay === "map" && (
+          <button
+            style={{
+              padding: "8px 18px",
+              borderRadius: "6px",
+              background: "transparent",
+              border: "1px solid rgba(255,255,255,0.3)",
+              color: "white",
+              cursor: "pointer",
+              fontSize: "12px",
+              fontWeight: 500,
+              flex: 1
+            }}
+          >
+            View My Output
+          </button>
+        )}
+        <button
+          onClick={() => setActiveOverlay(null)}
+          style={{
+            padding: "8px 18px",
+            borderRadius: "6px",
+            background: "rgba(16, 0, 67, 1)",
+            border: "1px solid rgba(99,102,241,0.5)",
+            color: "white",
+            cursor: "pointer",
+            fontSize: "12px",
+            fontWeight: 600,
+            flex: 1
+          }}
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 };
