@@ -1,4 +1,3 @@
-#Buildor Geo - Space Themed Portfolio Website
 
 <div align="center">
 <br />
