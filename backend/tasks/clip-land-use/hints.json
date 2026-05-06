@@ -1,0 +1,12 @@
+{
+  "DATA_NOT_LOADED": {
+    "level_1": "Start by loading the dataset.",
+    "level_2": "Use geopandas to read spatial data.",
+    "level_3": "Try gpd.read_file('file.geojson')"
+  },
+  "MISSING_CLIP": {
+    "level_1": "You need to clip one dataset using another.",
+    "level_2": "Use geopandas clip() function.",
+    "level_3": "Try gpd.clip(layer1, layer2)"
+  }
+}

@@ -7,14 +7,9 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { tasksData, Task, SubTask } from '../../data/tasksData';
 import { getProgress, resetProgress } from "@/utils/taskProgress";
-
-
-
+import { signIn } from "next-auth/react";
 
 const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
-
-
-
 const sessionRowStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
@@ -620,42 +615,57 @@ const Dashboard = () => {
     };
   }, []);
 
-  
+
 
 
   const [hoveredSession, setHoveredSession] = useState<number | null>(null);
   const { data: session, status } = useSession();
+  const isGitHubUser = session?.provider === "github";
   const router = useRouter();
   const [githubData, setGithubData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [taskLocations, setTaskLocations] = useState<{ name: string; coordinates: [number, number] }[]>([]);
   const [completedSubtasks, setCompletedSubtasks] = useState<string[]>([]);
+  const [progressData, setProgressData] = useState<any[]>([]);
 
-  useEffect(() => {
-    const progress = getProgress();
-    setCompletedSubtasks(progress.completedSubtasks);
-  }, []);
+ useEffect(() => {
+  const fetchProgress = async () => {
+    const res = await fetch("/api/get-progress");
+    const data = await res.json();
+
+    setProgressData(data);
+
+    // convert to completedSubtasks (VERY IMPORTANT)
+    const completed = data
+      .filter((p: any) => p.completed)
+      .map((p: any) => p.subtask_id);
+
+    setCompletedSubtasks(completed);
+  };
+
+  fetchProgress();
+}, []);
 
 
   // Use task locations if task is selected, otherwise show default markers
   // Default markers when no task is selected
   const defaultMarkers = [
-  { name: "Anchorage, Alaska", coordinates: [-149.9003, 61.2181] },
-  { name: "New York, USA", coordinates: [-74.006, 40.7128] },
-  { name: "Northeast Greenland National Park, Greenland", coordinates: [-20.5880, 74.5000] },
-  { name: "São Paulo, Brazil", coordinates: [-46.6333, -23.5505] },
-  { name: "Paris, France", coordinates: [2.3522, 48.8566] },
-  { name: "Cape Town, South Africa", coordinates: [18.4241, -33.9249] },
-  { name: "Dubai, UAE", coordinates: [55.2708, 25.2048] },
-  { name: "Moscow, Russia", coordinates: [37.6173, 55.7558] },
-  { name: "Tokyo, Japan", coordinates: [139.6917, 35.6895] },
-  { name: "Shanghai, China", coordinates: [121.4737, 31.2304] },
-  { name: "Bagdogra, India", coordinates: [88.3117, 26.6812] },
-  { name: "Singapore", coordinates: [103.8198, 1.3521] },
-  { name: "Sydney, Australia", coordinates: [151.2093, -33.8688] },
-  { name: "Wellington, New Zealand", coordinates: [174.7762, -41.2865] },
-];
+    { name: "Anchorage, Alaska", coordinates: [-149.9003, 61.2181] },
+    { name: "New York, USA", coordinates: [-74.006, 40.7128] },
+    { name: "Northeast Greenland National Park, Greenland", coordinates: [-20.5880, 74.5000] },
+    { name: "São Paulo, Brazil", coordinates: [-46.6333, -23.5505] },
+    { name: "Paris, France", coordinates: [2.3522, 48.8566] },
+    { name: "Cape Town, South Africa", coordinates: [18.4241, -33.9249] },
+    { name: "Dubai, UAE", coordinates: [55.2708, 25.2048] },
+    { name: "Moscow, Russia", coordinates: [37.6173, 55.7558] },
+    { name: "Tokyo, Japan", coordinates: [139.6917, 35.6895] },
+    { name: "Shanghai, China", coordinates: [121.4737, 31.2304] },
+    { name: "Bagdogra, India", coordinates: [88.3117, 26.6812] },
+    { name: "Singapore", coordinates: [103.8198, 1.3521] },
+    { name: "Sydney, Australia", coordinates: [151.2093, -33.8688] },
+    { name: "Wellington, New Zealand", coordinates: [174.7762, -41.2865] },
+  ];
 
 
   // Use task locations if task is selected, otherwise show default
@@ -671,7 +681,14 @@ const Dashboard = () => {
       router.push("/auth/signin?callbackUrl=/dashboard");
     }
 
-    if (session?.accessToken) {
+    if (session) {
+      // 🔥 Sync user to Supabase
+      fetch("/api/user/sync", {
+        method: "POST",
+      });
+    }
+
+    if (session?.accessToken && session.provider === "github") {
       fetchGitHubData();
     }
   }, [status, session, router]);
@@ -745,21 +762,6 @@ const Dashboard = () => {
     { name: "Emma Davis", location: "Sydney, AUS", flag: "🇦🇺", device: "iPhone 13", time: "3 days ago" },
   ];
 
-  // Load completed subtasks from storage on mount
-  useEffect(() => {
-    const loadProgress = async () => {
-      try {
-        const result = localStorage.getItem('task-progress');
-        if (result) {
-          const progress = JSON.parse(result);
-          setCompletedSubtasks(progress.completedSubtasks || []);
-        }
-      } catch (error) {
-        console.log('No previous progress found');
-      }
-    };
-    loadProgress();
-  }, []);
 
   const handleTaskSelect = (taskId: string) => {
     const task = tasksData.find((t: { id: string; }) => t.id === taskId);
@@ -769,7 +771,7 @@ const Dashboard = () => {
     }
   };
 
-    const handleTaskClear = () => { resetProgress(); setCompletedSubtasks([]); setSelectedTask(null); };
+  const handleTaskClear = () => { resetProgress(); setCompletedSubtasks([]); setSelectedTask(null); };
 
   const handleMarkerClick = (subtask: SubTask) => {
     // Only allow clicking the start marker or completed + next one
@@ -906,31 +908,39 @@ const Dashboard = () => {
               }}
             >
               {[
-                'Dashboard',
-                'Learning Path',
-                'Tasks',
-                'Datasets',
-                'Portfolio',
-                'Insights',
+                { name: 'Dashboard', href: '/dashboard' },
+                { name: 'Learning Path', href: '#' },
+                { name: 'Tasks', href: '/coding' },
+                { name: 'Datasets', href: '#' },
+                { name: 'Portfolio', href: '#' },
+                { name: 'Leaderboard', href: '/leaderboard' },
+                { name: 'Courses', href: '/courses' },
               ].map((item) => (
                 <span
-                  key={item}
+                  key={item.name}
+                  onClick={() => item.href !== '#' && router.push(item.href)}
                   style={{
                     cursor: 'pointer',
-                    opacity: item === 'Dashboard' ? 1 : 0.75,
-                    fontWeight: item === 'Dashboard' ? 600 : 500,
+                    opacity: item.name === 'Dashboard' ? 1 : 0.75,
+                    fontWeight: item.name === 'Dashboard' ? 600 : 500,
                   }}
                 >
-                  {item}
+                  {item.name}
                 </span>
               ))}
             </nav>
 
             {/* ================= RIGHT : ICON BUTTONS ================= */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-              {['💬', '🔔', '⚙️', '👤'].map((icon, i) => (
+              {[
+                { icon: '💬', route: null },
+                { icon: '🔔', route: null },
+                { icon: '⚙️', route: null },
+                { icon: '👤', route: '/profile' }, // 👈 THIS IS IMPORTANT
+              ].map((item, i) => (
                 <div
                   key={i}
+                  onClick={() => item.route && router.push(item.route)}
                   style={{
                     width: '36px',
                     height: '36px',
@@ -940,10 +950,10 @@ const Dashboard = () => {
                     justifyContent: 'center',
                     background: 'rgba(255,255,255,0.08)',
                     boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.08)',
-                    cursor: 'pointer',
+                    cursor: item.route ? 'pointer' : 'default',
                   }}
                 >
-                  {icon}
+                  {item.icon}
                 </div>
               ))}
             </div>
@@ -982,12 +992,60 @@ const Dashboard = () => {
                 }}
               >
                 <motion.div variants={cardSlideFromLeft}>
-                  {loading ? (
-                    <div style={{ ...cardBaseStyle, backgroundColor: 'rgba(17, 24, 39, 0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '200px' }}>
-                      <div style={{ color: 'white', fontSize: '14px' }}>Loading GitHub data...</div>
-                    </div>
+                  {isGitHubUser ? (
+                    loading ? (
+                      <div
+                        style={{
+                          ...cardBaseStyle,
+                          backgroundColor: "rgba(17, 24, 39, 0.95)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          minHeight: "200px",
+                        }}
+                      >
+                        <div style={{ color: "white", fontSize: "14px" }}>
+                          Loading GitHub data...
+                        </div>
+                      </div>
+                    ) : (
+                      <GitHubIdentityCard githubData={githubData} />
+                    )
                   ) : (
-                    <GitHubIdentityCard githubData={githubData} />
+                    <div
+                      style={{
+                        ...cardBaseStyle,
+                        backgroundColor: "rgba(17, 24, 39, 0.95)",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        minHeight: "200px",
+                        textAlign: "center",
+                        color: "white",
+                      }}
+                    >
+                      <h3 style={{ marginBottom: "10px" }}>Connect GitHub</h3>
+
+                      <p style={{ fontSize: "12px", opacity: 0.7 }}>
+                        Connect your GitHub to unlock analytics, projects & portfolio
+                      </p>
+
+                      <button
+                        onClick={() => signIn("github")}
+                        style={{
+                          marginTop: "12px",
+                          padding: "8px 16px",
+                          borderRadius: "8px",
+                          background: "#24292e",
+                          color: "white",
+                          cursor: "pointer",
+                          border: "none",
+                        }}
+                      >
+                        Connect GitHub
+                      </button>
+                    </div>
                   )}
                 </motion.div>
 
@@ -1286,3 +1344,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+

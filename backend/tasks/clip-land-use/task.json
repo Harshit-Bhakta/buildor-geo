@@ -1,0 +1,8 @@
+{
+  "task_id": "clip-land-use",
+  "title": "Clip Land Use Data",
+  "expected_flow": [
+    "read_file",
+    "clip"
+  ]
+}

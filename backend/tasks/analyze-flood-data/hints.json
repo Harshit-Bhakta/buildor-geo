@@ -1,0 +1,17 @@
+{
+  "DATA_NOT_LOADED": {
+    "level_1": "Start by loading the dataset.",
+    "level_2": "Use geopandas to read spatial data.",
+    "level_3": "Try gpd.read_file('file.geojson')"
+  },
+  "NO_VISUALIZATION": {
+    "level_1": "You should visualize the data.",
+    "level_2": "Use plot() or similar functions.",
+    "level_3": "Try gdf.plot()"
+  },
+  "MISSING_SHOW": {
+    "level_1": "Your plot is not displayed.",
+    "level_2": "Use matplotlib to show results.",
+    "level_3": "Try plt.show()"
+  }
+}

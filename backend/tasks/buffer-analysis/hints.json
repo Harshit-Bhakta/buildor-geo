@@ -1,0 +1,22 @@
+{
+  "DATA_NOT_LOADED": {
+    "level_1": "Load your dataset first.",
+    "level_2": "Use geopandas read_file.",
+    "level_3": "Try gpd.read_file('file.geojson')"
+  },
+  "CRS_MISSING": {
+    "level_1": "Check coordinate system.",
+    "level_2": "Buffer needs projected CRS.",
+    "level_3": "Use gdf.to_crs('EPSG:32643')"
+  },
+  "MISSING_BUFFER": {
+    "level_1": "You need buffering.",
+    "level_2": "Use buffer() function.",
+    "level_3": "Try gdf.buffer(500)"
+  },
+  "NO_SPATIAL_JOIN": {
+    "level_1": "Find features inside buffer.",
+    "level_2": "Use spatial join.",
+    "level_3": "Try gpd.sjoin()"
+  }
+}

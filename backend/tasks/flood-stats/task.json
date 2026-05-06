@@ -1,0 +1,8 @@
+{
+  "task_id": "flood-stats",
+  "title": "Calculate Flood Statistics",
+  "expected_flow": [
+    "read_file",
+    "area"
+  ]
+}

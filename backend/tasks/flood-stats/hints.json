@@ -1,0 +1,12 @@
+{
+  "DATA_NOT_LOADED": {
+    "level_1": "Start by loading the dataset.",
+    "level_2": "Use geopandas to read spatial data.",
+    "level_3": "Try gpd.read_file('file.geojson')"
+  },
+  "MISSING_AREA": {
+    "level_1": "You need to calculate the area of geometries.",
+    "level_2": "Use the .area property of GeoDataFrame.",
+    "level_3": "Try gdf.area"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "task_id": "analyze-flood-data",
+  "title": "Analyze Flood Data",
+  "expected_flow": [
+    "read_file",
+    "plot",
+    "show"
+  ]
+}

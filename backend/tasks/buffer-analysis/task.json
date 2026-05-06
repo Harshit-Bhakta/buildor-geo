@@ -1,0 +1,8 @@
+{
+  "task_id": "buffer-analysis",
+  "title": "Buffer Analysis Around Rivers",
+  "expected_flow": [
+    "read_file",
+    "buffer"
+  ]
+}

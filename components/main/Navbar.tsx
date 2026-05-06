@@ -2,12 +2,11 @@
 
 import Image from "next/image";
 import React from "react";
+import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
 
 const Navbar = () => {
   const { data: session, status } = useSession();
-  const router = useRouter();
 
   const handleSignOut = async () => {
     await signOut({ callbackUrl: "/" });
@@ -15,11 +14,10 @@ const Navbar = () => {
 
   return (
     <div className="w-full h-[65px] fixed top-0 shadow-lg shadow-[#2A0E61]/50 bg-[#03001417] backdrop-blur-md z-50 px-10">
-      <div className="w-full h-full flex flex-row items-center justify-between m-auto px-[10px]">
-        <a
-          href="/"
-          className="h-auto w-auto flex flex-row items-center"
-        >
+      <div className="w-full h-full flex items-center justify-between m-auto px-[10px]">
+
+        {/* Logo */}
+        <Link href="/" className="flex items-center">
           <Image
             src="/NavLogo.png"
             alt="logo"
@@ -30,29 +28,33 @@ const Navbar = () => {
           <span className="font-bold ml-[10px] hidden md:block text-gray-300">
             AI-Powered Geospatial Learning Platform
           </span>
-        </a>
+        </Link>
 
+        {/* Center Navigation (only when logged in) */}
         {session && (
-          <div className="w-[500px] h-full flex flex-row items-center justify-between md:mr-20">
-            <div className="flex items-center justify-between w-full h-auto border border-[#7042f861] bg-[#0300145e] mr-[15px] px-[20px] py-[10px] rounded-full text-gray-200">
+          <div className="w-[500px] flex items-center justify-between md:mr-20">
+            <div className="flex items-center justify-between w-full border border-[#7042f861] bg-[#0300145e] px-[20px] py-[10px] rounded-full text-gray-200">
               <a href="#about-me" className="cursor-pointer">
                 About me
               </a>
               <a href="#skills" className="cursor-pointer">
                 Skills
               </a>
-              <a href="/dashboard" className="cursor-pointer">
+              <Link href="/dashboard" className="cursor-pointer">
                 Dashboard
-              </a>
+              </Link>
             </div>
           </div>
         )}
 
-        <div className="flex flex-row gap-4 items-center">
+        {/* Right Side */}
+        <div className="flex gap-4 items-center">
+
           {status === "loading" ? (
             <div className="text-gray-400">Loading...</div>
           ) : session ? (
             <>
+              {/* User Info */}
               <div className="flex items-center gap-3">
                 <img
                   src={session.user?.image || "/default-avatar.png"}
@@ -63,33 +65,38 @@ const Navbar = () => {
                   {session.user?.name}
                 </span>
               </div>
+
+              {/* Sign Out */}
               <button
                 onClick={handleSignOut}
-                className="px-4 py-2 rounded-full border border-[#7042f861] text-gray-200 hover:bg-[#7042f861]/30"
+                className="px-4 py-2 rounded-full border border-[#7042f861] text-gray-200 hover:bg-[#7042f861]/30 transition"
               >
                 Sign out
               </button>
             </>
           ) : (
             <>
-              <a
-                href="/auth/signin?callbackUrl=/"
-                className="px-4 py-2 rounded-full border border-[#7042f861] text-gray-200 hover:bg-[#7042f861]/30"
+              {/* Sign In */}
+              <Link
+                href="/auth/signin?callbackUrl=/dashboard"
+                className="px-4 py-2 rounded-full border border-[#7042f861] text-gray-200 hover:bg-[#7042f861]/30 transition"
               >
                 Sign in
-              </a>
-              <a
-                href="/auth/signin"
-                className="px-4 py-2 rounded-full bg-[#7042f861] text-white hover:opacity-90"
+              </Link>
+
+              {/* Sign Up (same flow for now) */}
+              <Link
+                href="/auth/signin?callbackUrl=/dashboard"
+                className="px-4 py-2 rounded-full bg-[#7042f861] text-white hover:opacity-90 transition"
               >
-                Sign up
-              </a>
+                Get Started
+              </Link>
             </>
           )}
         </div>
       </div>
     </div>
   );
-}
+};
 
 export default Navbar;
